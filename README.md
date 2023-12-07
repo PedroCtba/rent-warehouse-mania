@@ -1,1 +1,2 @@
-# rent-warehouse-mania
+# Rent Warehouse Mania!
+Esse projeto junta a biblioteca DLT e o banco de dados relacional bigquery para montar um banco de dados relacional organizado que tem como fonte múltiplas fontes de dados bastante desorganizadas que serão organizadas via DLT
