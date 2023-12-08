@@ -1,18 +1,32 @@
-# Online imports
+# Imports online
 import dlt
 import requests
 from bs4 import BeautifulSoup
 from hashlib import md5
 
-# Personal imports
-from rent_terms_lists import street_synonyms, city_names
+# Import offline
+from rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
 
 # Fazer função que "yield" o dict com os dados de imóveis
-@dlt.resource(name="chaves_na_mao", write_disposition="append", primary_key="id")
+@dlt.resource(name="chaves_na_mao_table", write_disposition="append", primary_key="id")
 def get_rents_chaves_na_mao(
-    url: str = "https://www.chavesnamao.com.br/apartamentos-para-alugar/pr-curitiba/?utm_source=google&utm_medium=conversao_aluguel&utm_campaign=conversao_aluguel_pr_cwb&utm_content=&gad_source=1&gclid=CjwKCAiA98WrBhAYEiwA2WvhOlXcdOWWbW_XhcU4gW2khmsYKCZR5pkida48Gh4tgMoHNimnEKkLChoCQskQAvD_BwE",
+    url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
     rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl"
 ) -> dict:
+    # Fazer função de filtrar lista de palavras
+    def filter_words(words_list, desired_c=None, not_desired_c=None):
+        # Retornar lista com as palavras contenham todos os desired_c e nenhum dos not_desired_c
+        if desired_c and not_desired_c:
+            return [word for word in words_list if any(char in word for char in desired_c) and all(char not in word for char in not_desired_c)]
+        
+        # Retornar lista com as palavras contenham todos os desired_c
+        elif desired_c:
+            return [word for word in words_list if any(char in word for char in desired_c)]
+
+        # Retornar lista com as palavras não contenham not_desired_c
+        elif not_desired_c:
+            return [word for word in words_list if all(char not in word for char in not_desired_c)]
+
     # Fazer função de pegar o possível preço do imóvel em uma lista
     def get_rent_price(possible_prices: list) -> float:
         # Fazer lista vazia para guardar os valores que realmente podem ser o preço
@@ -22,11 +36,22 @@ def get_rents_chaves_na_mao(
         for price in possible_prices:
             # Se a string iterada tiver qualquer dígito numérico
             if any(l.isdigit() for l in price):
-                # Guarde ela na lista
-                new_possible_prices.append(price)
+                # Mantenha apenas os numéricos ou ".", "," nela
+                price = "".join([l for l in price if l.isdigit() or l in (".", ",")])
 
-        # Transforme todos os items em "new_possible_prices" em floats
-        new_possible_prices = [float("".join([l for l in price if l.isdigit() or l in (".", ",")])) for price in new_possible_prices]
+                # Divida ela na virgula e pegue a primeira parte
+                price = price.split(",")[0]
+                
+                # Tente convertela para float e guarde-a na lista em seguida
+                try:
+                    price = float(price)
+
+                    # Guarde ela na lista 
+                    new_possible_prices.append(price)
+
+                # Em caso de erro de tipo na conversão, pule essa string
+                except ValueError:
+                    print(f"String -> {price} não é um preço de imóvel!")
 
         # Retorne o maior campo da lista
         return max(new_possible_prices)
@@ -39,12 +64,12 @@ def get_rents_chaves_na_mao(
         # Iterar as possíveis strings que contem o tamanho
         for size in possible_sizes:
             # Se a string iterada tiver qualquer dígito numérico
-            if any(l.isdigit() for l in size):
+            if any(l.isdigit() and l != "²" for l in size):
                 # Guarde ela na lista
                 new_possible_sizes.append(size)
 
         # Transforme todos os items em "new_possible_sizes" em inteiros
-        new_possible_sizes = [int("".join([l for l in price if l.isdigit()])) for price in new_possible_sizes]
+        new_possible_sizes = [int("".join([l for l in price if l.isdigit()]).replace("²", "")) for price in new_possible_sizes]
 
         # Retorne o primeiro campo da lista
         return new_possible_sizes[0]
@@ -85,19 +110,19 @@ def get_rents_chaves_na_mao(
             imovel_words = imovel.split()
 
             # Pegar campo de preço do imovel
-            preco = get_rent_price([word for word in imovel_words if "$" in word])
+            preco = get_rent_price(filter_words(imovel_words, desired_c=".", not_desired_c="²"))
 
             # Pegar campo de tamanho
-            tamanho = get_rent_size([word for word in imovel_words if "²" in word])
+            tamanho = get_rent_size(filter_words(imovel_words, desired_c="²", not_desired_c="$"))
 
             # Pegar campo de endereço
             endereco = get_rent_adress(imovel_words)
 
             # Gerar id com hash md5
-            rent_id = md5(endereco).hexdigest()
+            rent_id = md5(endereco.encode("utf-8")).hexdigest()
 
             # Retornar o dicionários com os dados do imóvel
-            yield {
+            yield  {
                 "id": rent_id,
                 "preco": preco,
                 "tamanho": tamanho,
@@ -105,10 +130,18 @@ def get_rents_chaves_na_mao(
             }
 
 # Fazer pipeline DLT
-pipeline = dlt.Pipeline(
-    pipeline_name="chaves_na_mao_append",
-    destination="bigquery",
-    dataset_name="chaves_na_mao_append_dataset"
+pipeline = dlt.pipeline(
+    # Nome do pipeline
+    pipeline_name="chaves_na_mao_pipeline",
+
+    # Nome do schema dentro do DB (Nome da tabela definido no decorator)
+    dataset_name="chaves_na_mao_schema",
+
+    # Destino duckdb
+    destination="duckdb",
+
+    # Caminho do DB
+    credentials="../db/rent_warehouse_mania.duckdb"
 )
 
 # Executar pipeline

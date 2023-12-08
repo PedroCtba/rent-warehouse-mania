@@ -1,2 +1,4 @@
 *.toml
 *.json
+*.duckdb
+*.duckdb.wal
