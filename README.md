@@ -1,2 +1,2 @@
 # Rent Warehouse Mania!
-Esse projeto junta a biblioteca DLT e o banco de dados relacional bigquery para montar um banco de dados relacional organizado que tem como fonte múltiplas fontes de dados bastante desorganizadas que serão organizadas via DLT
+Esse projeto junta a biblioteca DLT e o banco de dados relacional duckdb para construir um ambiente analítico com os alugueis de Curitiba, o DLT é poderoso em organizar fontes de dados diversas e fazer as atualizações nas tabelas em diferentes disposições
