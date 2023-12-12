@@ -9,18 +9,22 @@ from hashlib import md5
 
 # Imports offline
 from resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
-from resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress
+from resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_n_of_mapped_rooms
+
+# Definir limite de paginas para essa fonte
+PAGE_NUMBER_LIMIT = 100
 
 # Fazer função para geração do cadastro dos imóveis
-@dlt.resource(name="chaves_na_mao_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
-def generate_chaves_na_mao_register(
+@dlt.resource(name="viva_real_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
+def generate_viva_real_register(
     page_number: int = 1,
-    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
-    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl"
+    base_url: str = "https://www.vivareal.com.br/aluguel/parana/curitiba/?pagina=@#onde=,Paran%C3%A1,Curitiba,,,,,city,BR%3EParana%3ENULL%3ECuritiba,,,",
+    rent_html_class: str = "property-card__container js-property-card",
+    rent_html_element: str = "article",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
-        url = base_url + f"?pg={page_number}"
+        url = base_url.replace("@", str(page_number))
 
         # Mostra página atual iterada
         print(f"URL Base -> {base_url};\nPágina iterada atualmente -> {page_number}")
@@ -43,7 +47,7 @@ def generate_chaves_na_mao_register(
             soup = BeautifulSoup(response.content, "html.parser")
 
             # Pegar todas as divs com a classe rent_html_class
-            imoveis = [imovel.text for imovel in soup.find_all("div", class_=rent_html_class)]
+            imoveis = [imovel.text for imovel in soup.find_all(rent_html_element, class_=rent_html_class)]
 
             # Iterar todos os imóveis
             for imovel in imoveis:
@@ -59,6 +63,15 @@ def generate_chaves_na_mao_register(
                 # Pegar campo de endereço
                 endereco = get_rent_adress(imovel_words)
 
+                # Pegar campo de n de quartos
+                qtd_quartos = get_rent_n_of_mapped_rooms(imovel_words, mapped_room_name="quarto")
+
+                # Pegar campo de n banheiros
+                qtd_banheiros = get_rent_n_of_mapped_rooms(imovel_words, mapped_room_name="banheiro")
+
+                # Pegar campo de n vagas garagem
+                qtd_vagas = get_rent_n_of_mapped_rooms(imovel_words, mapped_room_name="vaga")      
+
                 # Gerar id com hash md5
                 rent_id = md5(endereco.encode("utf-8")).hexdigest()
 
@@ -69,17 +82,29 @@ def generate_chaves_na_mao_register(
                     "preco": preco,
                     "tamanho": tamanho,
                     "endereco": endereco,
+                    "qtd_quartos": qtd_quartos,
+                    "qtd_banheiros": qtd_banheiros,
+                    "qtd_vagas": qtd_vagas,
                 }
 
             # Incrementar pagina para próximo yield
             page_number += 1
 
+        # Se a função chega no limte de página WEB
+        if page_number > PAGE_NUMBER_LIMIT:
+            # Mostre para o usuário
+            print(f"URL Base -> {base_url};\nO scrapper atingiu o limte de páginas [{PAGE_NUMBER_LIMIT}] web com essa URL base;")
+
+            # Pare o laço
+            break
+
 # Fazer função para registro de mudanças de preço dos imóveis
-@dlt.resource(name="chaves_na_mao_history", write_disposition="append", primary_key="id", columns=PriceRegister)
-def generate_chaves_na_mao_history(
+@dlt.resource(name="viva_real_history", write_disposition="append", primary_key="id", columns=PriceRegister)
+def generate_viva_real_history(
     page_number: int = 1,
-    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
-    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl"
+    base_url: str = "https://www.vivareal.com.br/aluguel/parana/curitiba/?pagina=@#onde=,Paran%C3%A1,Curitiba,,,,,city,BR%3EParana%3ENULL%3ECuritiba,,,",
+    rent_html_class: str = "property-card__container js-property-card",
+    rent_html_element: str = "article",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
@@ -106,7 +131,7 @@ def generate_chaves_na_mao_history(
             soup = BeautifulSoup(response.content, "html.parser")
 
             # Pegar todas as divs com a classe rent_html_class
-            imoveis = [imovel.text for imovel in soup.find_all("div", class_=rent_html_class)]
+            imoveis = [imovel.text for imovel in soup.find_all(rent_html_element, class_=rent_html_class)]
 
             # Iterar todos os imóveis
             for imovel in imoveis:
@@ -132,20 +157,28 @@ def generate_chaves_na_mao_history(
             # Incrementar pagina para próximo yield
             page_number += 1
 
-# Fazer função juntando os recursos do chaves na mão
+        # Se a função chega no limte de página WEB
+        if page_number > PAGE_NUMBER_LIMIT:
+            # Mostre para o usuário
+            print(f"URL Base -> {base_url};\nO scrapper atingiu o limte de páginas [{PAGE_NUMBER_LIMIT}] web com essa URL base;")
+
+            # Pare o laço
+            break
+
+# Fazer função juntando os recursos do site viva real
 @dlt.source
-def generate_chaves_na_mao():
+def generate_viva_real():
     # yield resources
-    yield generate_chaves_na_mao_register
-    yield generate_chaves_na_mao_history
+    yield generate_viva_real_register
+    yield generate_viva_real_history
 
 # Fazer pipeline DLT
 pipeline = dlt.pipeline(
     # Nome do pipeline
-    pipeline_name="chaves_na_mao_pipeline",
+    pipeline_name="viva_real_pipeline",
 
     # Nome do schema dentro do DB (Nome da tabela definido no decorator)
-    dataset_name="chaves_na_mao_schema",
+    dataset_name="viva_real_schema",
 
     # Destino duckdb
     destination="duckdb",
@@ -155,4 +188,4 @@ pipeline = dlt.pipeline(
 )
 
 # Executar pipeline com o source
-pipeline.run(generate_chaves_na_mao())
+pipeline.run(generate_viva_real())

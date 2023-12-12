@@ -52,8 +52,15 @@ def get_rent_price(possible_prices: list, max_rent: float = float("inf")) -> flo
     # Filtrar alugueis abaixo de max_rent
     new_possible_prices = [price for price in new_possible_prices if price < max_rent]
 
-    # Retorne o maior campo da lista
-    return max(new_possible_prices)
+    # Tente
+    try:
+        # Retornae o maior campo da lista
+        return max(new_possible_prices)
+    
+    # Em caso de lista vazia
+    except ValueError:
+        # Retorne nuloe
+        return None
 
 # Fazer função de pegar o tamanho do imóvel
 def get_rent_size(possible_sizes: list,  max_size: int = float("inf")) -> float:
@@ -85,13 +92,20 @@ def get_rent_size(possible_sizes: list,  max_size: int = float("inf")) -> float:
     # Filtrar tamanhnos abaixo de max_size
     new_possible_sizes = [size for size in new_possible_sizes if size < max_size]
 
-    # Retorne o primeiro campo da lista
-    return new_possible_sizes[0]
+    # Tente retornar o primeiro indice
+    try:
+        # Retorne o primeiro campo da lista
+        return new_possible_sizes[0]
+    
+    # Se não houver itens o suficiente
+    except IndexError:
+        # Retorne Nuloe
+        return None
 
 # Fazer função de pegar o endereço do imóvel
 def get_rent_adress(rent_splited_words: list) -> str:
     # Importar objetos   
-    from rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
+    from resources.rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
     
     # Faça uma lista vazia para guardar os possíveis indexes
     possible_rua_index = []
@@ -116,3 +130,24 @@ def get_rent_adress(rent_splited_words: list) -> str:
     else:
         # Retorne um join geral
         return " ".join(rent_splited_words)
+
+# Fazer função para pegar o numero de comodos
+def get_rent_n_of_mapped_rooms(rent_splited_words: list, mapped_room_name: str):
+    # Iterar todas as palavras do imóvel fornecidas
+    for iword, word in enumerate(rent_splited_words):
+        # Se comodo mapeado estiver na palavra iterada
+        if mapped_room_name.lower().strip() in word.lower().strip():
+            # Tente
+            try:
+                # Converter o item antes do atual para inteiro
+                n_mapped_rooms = int(rent_splited_words[iword - 1])
+
+                # Retorne o numero de comodos
+                return n_mapped_rooms
+            
+            # Em caso de erro de conversão de tipo
+            except ValueError:
+                return 0
+            
+    # Se o comodo mapeado nunca for localizado retorne 0
+    return 0
