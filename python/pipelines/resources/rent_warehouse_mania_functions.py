@@ -63,16 +63,20 @@ def get_rent_price(possible_prices: list, max_rent: float = float("inf")) -> flo
         return None
 
 # Fazer função de pegar o tamanho do imóvel
-def get_rent_size(possible_sizes: list,  max_size: int = float("inf")) -> float:
+def get_rent_size(possible_sizes: list,  remove_from_size_chars: tuple, max_size: int = float("inf")) -> float:
     # Fazer lista vazia para guardar os valores que realmente podem ser o tamanho do imóvel
     new_possible_sizes = []
 
     # Iterar as possíveis strings que contem o tamanho
     for size in possible_sizes:
-        # Se a string iterada tiver qualquer dígito numérico que não seja ², ³
-        if any(l.isdigit() and l != "²" and l != "³" for l in size):
-            # Deixe somente numeros e não deixe ², ³
-            size = "".join([l for l in size if (l.isdigit() and l != "²" and l != "³") or (l == ",")])
+        # Se a string iterada tiver qualquer dígito numérico
+        if any(l.isdigit() for l in size):
+            # Retira todos os remove_from_size_chars da string
+            for char in remove_from_size_chars:
+                size = size.replace(char, "")
+
+            # Deixe somente numeros e "," no size
+            size = "".join([l for l in size if l.isdigit() or l == ","])
 
             # Divida o tamanho na "," (se tiver) e pegue o primeiro campo
             size = size.split(",")[0]
@@ -99,7 +103,7 @@ def get_rent_size(possible_sizes: list,  max_size: int = float("inf")) -> float:
     
     # Se não houver itens o suficiente
     except IndexError:
-        # Retorne Nuloe
+        # Retorne Nulo
         return None
 
 # Fazer função de pegar o endereço do imóvel
@@ -151,3 +155,18 @@ def get_rent_n_of_mapped_rooms(rent_splited_words: list, mapped_room_name: str):
             
     # Se o comodo mapeado nunca for localizado retorne 0
     return 0
+
+# Fazer função para pegar o bairro do imovel
+def get_rent_neighborhood(rent_splited_words: list):
+    # Importar a tuplad de bairros
+    from resources.rent_warehouse_mania_pipeline_objects import neighborhood_names
+
+    # Iterar todas as palavras do imóvel fornecidas
+    for word in rent_splited_words:
+        # Se alguma das palavras for um dos bairros anotados do projeto
+        if word.lower().strip() in neighborhood_names:
+            # Retorne o bairro
+            return word
+        
+    # Em caso de não localizar o bairro, retorne nulo
+    return None

@@ -14,16 +14,16 @@ from resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
 from resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_neighborhood
 
 # Fazer função para geração do cadastro dos imóveis
-@dlt.resource(name="chaves_na_mao_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
-def generate_chaves_na_mao_register(
+@dlt.resource(name="olx_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
+def generate_olx_register(
     page_number: int = 1,
-    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
-    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl",
+    base_url: str = "https://www.olx.com.br/imoveis/aluguel/estado-pr/regiao-de-curitiba-e-paranagua?o=",
+    rent_html_class: str = "olx-ad-card__content olx-ad-card__content--horizontal",
     rent_html_element: str = "div",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
-        url = base_url + f"?pg={page_number}"
+        url = base_url + f"{page_number}"
 
         # Mostra página atual iterada
         print(f"URL Base -> {base_url};\nPágina iterada atualmente -> {page_number}")
@@ -54,10 +54,10 @@ def generate_chaves_na_mao_register(
                 imovel_words = imovel.split()
 
                 # Pegar campo de preço do imovel
-                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c=("²", "³")), max_rent=50_000)
+                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c="²"), max_rent=50_000)
 
                 # Pegar campo de tamanho
-                tamanho = get_rent_size(filter_words(imovel_words, desired_c=("²", "³"), not_desired_c="$"), remove_from_size_chars=("²", "³"), max_size=5_000)
+                tamanho = get_rent_size(filter_words(imovel_words, desired_c=("²"), not_desired_c="$"), remove_from_size_chars=("²"), max_size=5_000)
 
                 # Pegar campo de endereço
                 endereco = get_rent_adress(imovel_words)
@@ -90,16 +90,16 @@ def generate_chaves_na_mao_register(
             break 
 
 # Fazer função para registro de mudanças de preço dos imóveis
-@dlt.resource(name="chaves_na_mao_history", write_disposition="append", primary_key="id", columns=PriceRegister)
-def generate_chaves_na_mao_history(
+@dlt.resource(name="olx_history", write_disposition="append", primary_key="id", columns=PriceRegister)
+def generate_olx_history(
     page_number: int = 1,
-    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
-    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl",
+    base_url: str = "https://www.olx.com.br/imoveis/aluguel/estado-pr/regiao-de-curitiba-e-paranagua?o=",
+    rent_html_class: str = "olx-ad-card__content olx-ad-card__content--horizontal",
     rent_html_element: str = "div",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
-        url = base_url + f"?pg={page_number}"
+        url = base_url + f"{page_number}"
 
         # Mostra página atual iterada
         print(f"URL Base -> {base_url};\nPágina iterada atualmente -> {page_number}")
@@ -130,7 +130,7 @@ def generate_chaves_na_mao_history(
                 imovel_words = imovel.split()
 
                 # Pegar campo de preço do imovel
-                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c=("²", "³")), max_rent=50_000)
+                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c="²"), max_rent=50_000)
 
                 # Pegar campo de endereço
                 endereco = get_rent_adress(imovel_words)
@@ -155,21 +155,21 @@ def generate_chaves_na_mao_history(
             
             # Pare a função
             break 
-
-# Fazer função juntando os recursos do chaves na mão
+    
+# Fazer função juntando os recursos do site viva real
 @dlt.source
-def generate_chaves_na_mao():
+def generate_olx():
     # yield resources
-    yield generate_chaves_na_mao_register
-    yield generate_chaves_na_mao_history
+    yield generate_olx_register
+    yield generate_olx_history
 
 # Fazer pipeline DLT
 pipeline = dlt.pipeline(
     # Nome do pipeline
-    pipeline_name="chaves_na_mao_pipeline",
+    pipeline_name="olx_pipeline",
 
     # Nome do schema dentro do DB (Nome da tabela definido no decorator)
-    dataset_name="chaves_na_mao_schema",
+    dataset_name="olx_schema",
 
     # Destino duckdb
     destination="duckdb",
@@ -179,4 +179,4 @@ pipeline = dlt.pipeline(
 )
 
 # Executar pipeline com o source
-pipeline.run(generate_chaves_na_mao())
+pipeline.run(generate_olx())

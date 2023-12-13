@@ -13,9 +13,7 @@ class ImovelRegister(Register):
     preco: Optional[float]
     tamanho: Optional[int]
     endereco: str
-    qtd_quartos: Optional[int]
-    qtd_banheiros: Optional[int]
-    qtd_vagas: Optional[int]
+    bairro: Optional[str]
 
 
 # Contruir classe schema de imovel History
