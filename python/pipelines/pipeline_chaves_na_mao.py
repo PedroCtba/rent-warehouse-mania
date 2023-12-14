@@ -175,7 +175,7 @@ pipeline = dlt.pipeline(
     destination="duckdb",
 
     # Caminho do DB
-    credentials="../../db/rent_warehouse_mania.duckdb"
+    credentials="../../airflow/db/rent_warehouse_mania.duckdb"
 )
 
 # Executar pipeline com o source

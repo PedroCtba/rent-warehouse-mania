@@ -10,20 +10,20 @@ from bs4 import BeautifulSoup
 from hashlib import md5
 
 # Imports offline
-from resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
-from resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_neighborhood
+from pipelines.resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
+from pipelines.resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_neighborhood
 
 # Fazer função para geração do cadastro dos imóveis
-@dlt.resource(name="zap_imoveis_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
-def generate_zap_imoveis_register(
+@dlt.resource(name="chaves_na_mao_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)
+def generate_chaves_na_mao_register(
     page_number: int = 1,
-    base_url: str = "https://www.zapimoveis.com.br/aluguel/imoveis/pr+curitiba/?__ab=new-area-logada:control,exp-aa-test:B,pix-payment:new&transacao=aluguel&onde=,Paran%C3%A1,Curitiba,,,,,city,BR%3EParana%3ENULL%3ECuritiba,-25.437238,-49.269973,&pagina=",
-    rent_html_class: str = "l-card__content",
+    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
+    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl",
     rent_html_element: str = "div",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
-        url = base_url + f"{page_number}"
+        url = base_url + f"?pg={page_number}"
 
         # Mostra página atual iterada
         print(f"URL Base -> {base_url};\nPágina iterada atualmente -> {page_number}")
@@ -54,10 +54,10 @@ def generate_zap_imoveis_register(
                 imovel_words = imovel.split()
 
                 # Pegar campo de preço do imovel
-                preco = get_rent_price(filter_words(imovel_words, desired_c=("."), not_desired_c=("²", "m2")), max_rent=50_000)
+                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c=("²", "³")), max_rent=50_000)
 
                 # Pegar campo de tamanho
-                tamanho = get_rent_size(filter_words(imovel_words, desired_c=("m2"), not_desired_c=("$")), remove_from_size_chars=("m2"), max_size=5_000)
+                tamanho = get_rent_size(filter_words(imovel_words, desired_c=("²", "³"), not_desired_c="$"), remove_from_size_chars=("²", "³"), max_size=5_000)
 
                 # Pegar campo de endereço
                 endereco = get_rent_adress(imovel_words)
@@ -90,16 +90,16 @@ def generate_zap_imoveis_register(
             break 
 
 # Fazer função para registro de mudanças de preço dos imóveis
-@dlt.resource(name="zap_imoveis_history", write_disposition="append", primary_key="id", columns=PriceRegister)
-def generate_zap_imoveis_history(
+@dlt.resource(name="chaves_na_mao_history", write_disposition="append", primary_key="id", columns=PriceRegister)
+def generate_chaves_na_mao_history(
     page_number: int = 1,
-    base_url: str = "https://www.zapimoveis.com.br/aluguel/imoveis/pr+curitiba/?__ab=new-area-logada:control,exp-aa-test:B,pix-payment:new&transacao=aluguel&onde=,Paran%C3%A1,Curitiba,,,,,city,BR%3EParana%3ENULL%3ECuritiba,-25.437238,-49.269973,&pagina=",
-    rent_html_class: str = "l-card__content",
+    base_url: str = "https://www.chavesnamao.com.br/imoveis-para-alugar/pr-curitiba/",
+    rent_html_class: str = "imoveis__Card-obm8pe-0 tNifl",
     rent_html_element: str = "div",
 ) -> Iterable[dict]:
     while True:
         # Definir url pagina atual
-        url = base_url + f"{page_number}"
+        url = base_url + f"?pg={page_number}"
 
         # Mostra página atual iterada
         print(f"URL Base -> {base_url};\nPágina iterada atualmente -> {page_number}")
@@ -130,7 +130,7 @@ def generate_zap_imoveis_history(
                 imovel_words = imovel.split()
 
                 # Pegar campo de preço do imovel
-                preco = get_rent_price(filter_words(imovel_words, desired_c=("."), not_desired_c=("²", "m2")), max_rent=50_000)
+                preco = get_rent_price(filter_words(imovel_words, desired_c=(".", "$"), not_desired_c=("²", "³")), max_rent=50_000)
 
                 # Pegar campo de endereço
                 endereco = get_rent_adress(imovel_words)
@@ -158,18 +158,18 @@ def generate_zap_imoveis_history(
 
 # Fazer função juntando os recursos do chaves na mão
 @dlt.source
-def generate_zap_imoveis():
+def generate_chaves_na_mao():
     # yield resources
-    yield generate_zap_imoveis_register
-    yield generate_zap_imoveis_history
+    yield generate_chaves_na_mao_register
+    yield generate_chaves_na_mao_history
 
 # Fazer pipeline DLT
 pipeline = dlt.pipeline(
     # Nome do pipeline
-    pipeline_name="zap_imoveis_pipeline",
+    pipeline_name="chaves_na_mao_pipeline",
 
     # Nome do schema dentro do DB (Nome da tabela definido no decorator)
-    dataset_name="zap_imoveis_schema",
+    dataset_name="chaves_na_mao_schema",
 
     # Destino duckdb
     destination="duckdb",
@@ -179,4 +179,4 @@ pipeline = dlt.pipeline(
 )
 
 # Executar pipeline com o source
-pipeline.run(generate_zap_imoveis())
+pipeline.run(generate_chaves_na_mao())

@@ -22,7 +22,7 @@ def main() -> None:
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Rode os arquivos em paralelo
         executor.map(run_python_script, arquivos)
-
+ 
 # Rodar como script
 if __name__ == '__main__':
     main()

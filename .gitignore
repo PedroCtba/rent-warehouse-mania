@@ -1,0 +1,4 @@
+*.jar
+*.duckdb
+metabase
+*logs
