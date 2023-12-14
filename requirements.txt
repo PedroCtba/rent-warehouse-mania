@@ -1,0 +1,7 @@
+beautifulsoup4==4.12.2
+dlt==0.3.25
+dlt[duckdb]
+pendulum==2.1.2
+pydantic==2.5.2
+pytest==7.4.3
+Requests==2.31.0

@@ -109,6 +109,7 @@ def get_rent_size(possible_sizes: list,  remove_from_size_chars: tuple, max_size
 # Fazer função de pegar o endereço do imóvel
 def get_rent_adress(rent_splited_words: list) -> str:
     # Importar objetos   
+    import re
     from resources.rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
     
     # Faça uma lista vazia para guardar os possíveis indexes
@@ -125,6 +126,9 @@ def get_rent_adress(rent_splited_words: list) -> str:
         if any(i in word.lower() for i in city_names):
             possible_city_index.append(iword)
 
+    # Just let spaces, letters and numbers on the rent words
+    rent_splited_words = [re.sub(r"[^a-zA-Z0-9.,\s]", "", word) for word in rent_splited_words]
+    
     # Se ambas as listas tiverem idnex
     if len(possible_rua_index) != 0 and len(possible_city_index) != 0:
         # Retornar o join de todas as palavras na string, escolhendo o min(possible_rua_index) até o max(possible_city_index)
