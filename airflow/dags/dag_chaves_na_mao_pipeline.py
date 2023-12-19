@@ -1,5 +1,6 @@
 from datetime import timedelta
 from airflow.decorators import dag
+import os
 
 import dlt
 from dlt.common import pendulum
@@ -23,10 +24,9 @@ default_task_args = {
 # - catchup is False which means that the daily runs from `start_date` will not be run, set to True to enable backfill
 # - max_active_runs - how many dag runs to perform in parallel. you should always start with 1
 
-
 @dag(
-    schedule_interval='@daily',
-    start_date=pendulum.datetime(2023, 12, 13),
+    schedule_interval="@daily",
+    start_date=pendulum.datetime(2023, 12, 20),
     catchup=False,
     max_active_runs=1,
     default_args=default_task_args
@@ -50,11 +50,10 @@ def load_data():
         destination="duckdb",
 
         # Caminho do DB
-        #credentials="rent_warehouse_mania.duckdb"
+        credentials=":pipeline:",
     )
 
     # create the source, the "serialize" decompose option will converts dlt resources into Airflow tasks. use "none" to disable it
     tasks.add_run(pipeline, generate_chaves_na_mao(), decompose="serialize", trigger_rule="all_done", retries=0, provide_context=True)
-
 
 load_data()

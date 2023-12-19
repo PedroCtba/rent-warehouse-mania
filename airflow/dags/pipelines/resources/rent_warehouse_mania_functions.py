@@ -110,7 +110,7 @@ def get_rent_size(possible_sizes: list,  remove_from_size_chars: tuple, max_size
 def get_rent_adress(rent_splited_words: list) -> str:
     # Importar objetos   
     import re
-    from resources.rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
+    from .rent_warehouse_mania_pipeline_objects import street_synonyms, city_names
     
     # Faça uma lista vazia para guardar os possíveis indexes
     possible_rua_index = []
@@ -163,7 +163,7 @@ def get_rent_n_of_mapped_rooms(rent_splited_words: list, mapped_room_name: str):
 # Fazer função para pegar o bairro do imovel
 def get_rent_neighborhood(rent_splited_words: list):
     # Importar a tuplad de bairros
-    from resources.rent_warehouse_mania_pipeline_objects import neighborhood_names
+    from .rent_warehouse_mania_pipeline_objects import neighborhood_names
 
     # Iterar todas as palavras do imóvel fornecidas
     for word in rent_splited_words:
