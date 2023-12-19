@@ -38,12 +38,22 @@ def dag_zap_imoveis():
     # import your source from pipeline script
     from pipelines.pipeline_zap_imoveis import generate_zap_imoveis
 
-    # modify the pipeline parameters 
-    pipeline = dlt.pipeline(pipeline_name="pipeline_name",
-                     dataset_name="dataset_name",
-                     destination="duckdb",
-                     full_refresh=False # must be false if we decompose
-                     )
+
+    # Fazer pipeline DLT
+    pipeline = dlt.pipeline(
+        # Nome do pipeline
+        pipeline_name="zap_imoveis_pipeline",
+
+        # Nome do schema dentro do DB (Nome da tabela definido no decorator)
+        dataset_name="zap_imoveis_schema",
+
+        # Destino duckdb
+        destination="duckdb",
+
+        # Caminho do DB
+        credentials=":pipeline:"
+    )
+
     # create the source, the "serialize" decompose option will converts dlt resources into Airflow tasks. use "none" to disable it
     tasks.add_run(pipeline, generate_zap_imoveis(), decompose="serialize", trigger_rule="all_done", retries=0, provide_context=True)
 

@@ -117,6 +117,9 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 160 
     command: webserver
     ports:
       - "8080:8080"
@@ -135,6 +138,9 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 160 
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
