@@ -10,8 +10,8 @@ from bs4 import BeautifulSoup
 from hashlib import md5
 
 # Imports offline
-from resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
-from resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_neighborhood
+from pipelines.resources.rent_warehouse_mania_schemas import ImovelRegister, PriceRegister
+from pipelines.resources.rent_warehouse_mania_functions import filter_words, get_rent_price, get_rent_size, get_rent_adress, get_rent_neighborhood
 
 # Fazer função para geração do cadastro dos imóveis
 @dlt.resource(name="zap_imoveis_register", write_disposition="merge", primary_key="id", columns=ImovelRegister)

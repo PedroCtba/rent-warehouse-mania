@@ -13,9 +13,9 @@ from dlt.helpers.airflow_helper import PipelineTasksGroup
 # - execution_timeout is set to 20 hours, tasks running longer that that will be terminated
 
 default_task_args = {
-    'owner': 'airflow',
-    'retries': 0,
-    'execution_timeout': timedelta(hours=20),
+    "owner": "airflow",
+    "retries": 0,
+    "execution_timeout": timedelta(hours=20),
 }
 
 # modify the default DAG arguments
@@ -31,7 +31,7 @@ default_task_args = {
     max_active_runs=1,
     default_args=default_task_args
 )
-def load_data():
+def dag_chaves_na_mao():
     # set `use_data_folder` to True to store temporary data on the `data` bucket. Use only when it does not fit on the local storage
     tasks = PipelineTasksGroup("pipeline_decomposed", use_data_folder=True, wipe_local_data=True)
 
@@ -56,4 +56,4 @@ def load_data():
     # create the source, the "serialize" decompose option will converts dlt resources into Airflow tasks. use "none" to disable it
     tasks.add_run(pipeline, generate_chaves_na_mao(), decompose="serialize", trigger_rule="all_done", retries=0, provide_context=True)
 
-load_data()
+dag_chaves_na_mao()

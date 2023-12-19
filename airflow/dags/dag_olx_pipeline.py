@@ -12,14 +12,11 @@ from dlt.helpers.airflow_helper import PipelineTasksGroup
 # - execution_timeout is set to 20 hours, tasks running longer that that will be terminated
 
 default_task_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': 'test@test.com',
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 0,
-    'execution_timeout': timedelta(hours=20),
+    "owner": "airflow",
+    "retries": 0,
+    "execution_timeout": timedelta(hours=20),
 }
+
 
 # modify the default DAG arguments
 # - the schedule below sets the pipeline to `@daily` be run each day after midnight, you can use crontab expression instead
@@ -29,27 +26,35 @@ default_task_args = {
 
 
 @dag(
-    schedule_interval='@daily',
-    start_date=pendulum.datetime(2023, 7, 1),
+    schedule_interval="@daily",
+    start_date=pendulum.datetime(2023, 12, 20),
     catchup=False,
     max_active_runs=1,
     default_args=default_task_args
 )
-def load_data():
+def dag_olx():
     # set `use_data_folder` to True to store temporary data on the `data` bucket. Use only when it does not fit on the local storage
     tasks = PipelineTasksGroup("pipeline_decomposed", use_data_folder=False, wipe_local_data=True)
 
     # import your source from pipeline script
-    from pipeline_or_source_script import source
+    from pipelines.pipeline_olx import generate_olx
 
-    # modify the pipeline parameters 
-    pipeline = dlt.pipeline(pipeline_name='pipeline_name',
-                     dataset_name='dataset_name',
-                     destination='duckdb',
-                     full_refresh=False # must be false if we decompose
-                     )
+    # Fazer pipeline DLT
+    pipeline = dlt.pipeline(
+        # Nome do pipeline
+        pipeline_name="olx_pipeline",
+
+        # Nome do schema dentro do DB (Nome da tabela definido no decorator)
+        dataset_name="olx_schema",
+
+        # Destino duckdb
+        destination="duckdb",
+
+        # Caminho do DB
+        credentials=":pipeline:",
+    )
+
     # create the source, the "serialize" decompose option will converts dlt resources into Airflow tasks. use "none" to disable it
-    tasks.add_run(pipeline, source(), decompose="serialize", trigger_rule="all_done", retries=0, provide_context=True)
+    tasks.add_run(pipeline, generate_olx(), decompose="serialize", trigger_rule="all_done", retries=0, provide_context=True)
 
-
-#load_data()
+dag_olx()
