@@ -26,9 +26,6 @@ O projeto utiliza a biblioteca DLT para a ingestão eficiente de dados de divers
 
 A análise exploratória de dados (EDA) é conduzida utilizando o Metabase, oferecendo insights valiosos para a tomada de decisões informadas sobre os aluguéis. Além disso, o sistema de alertas, implementado por meio do Airflow e Telegram, notifica os usuários sobre eventos relevantes.
 
-## Arquitetura:
-![Alt text](arquitetura.png)
-
 ## Contato
 
 Para dúvidas, sugestões ou colaborações, entre em contato pelo e-mail: [pedro.miyasaki@dhauz.com](mailto:seu_email@exemplo.com).
