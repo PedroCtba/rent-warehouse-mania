@@ -17,7 +17,7 @@ Os dados são armazenados no DuckDB.
 ### 4. Análise Exploratória de Dados (EDA)
 A análise dos dados é conduzida através do Metabase.
 
-### 5. Alertas
+### 5. Alertas (TODO)
 Alertas são gerados usando Airflow em conjunto com o Telegram.
 
 ## Como Funciona
